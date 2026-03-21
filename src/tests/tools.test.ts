@@ -284,6 +284,80 @@ describe("fiken_list_inbox", () => {
   });
 });
 
+// --- input validation ---
+
+describe("input validation", () => {
+  it("rejects companySlug with path traversal characters", async () => {
+    const client = createMockClient({
+      get: vi.fn().mockResolvedValue({}),
+    });
+    const server = new MockMcpServer();
+    registerCompanyTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_get_company", {
+      companySlug: "../../admin",
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Invalid company slug format");
+  });
+
+  it("rejects companySlug with slashes", async () => {
+    const client = createMockClient({
+      get: vi.fn().mockResolvedValue({}),
+    });
+    const server = new MockMcpServer();
+    registerCompanyTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_get_company", {
+      companySlug: "acme/../../admin",
+    });
+    expect(result.isError).toBe(true);
+  });
+
+  it("accepts valid company slugs", async () => {
+    const client = createMockClient({
+      get: vi.fn().mockResolvedValue({ name: "Acme AS" }),
+    });
+    const server = new MockMcpServer();
+    registerCompanyTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_get_company", {
+      companySlug: "acme-as",
+    });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it("rejects accountCode with path traversal characters", async () => {
+    const client = createMockClient({
+      get: vi.fn().mockResolvedValue({}),
+    });
+    const server = new MockMcpServer();
+    registerAccountTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_get_account", {
+      companySlug: "acme",
+      accountCode: "../../../admin",
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Account code must contain only digits and colons");
+  });
+
+  it("rejects invalid date format", async () => {
+    const client = createMockClient({
+      getPaginated: vi.fn().mockResolvedValue(paginatedOf([])),
+    });
+    const server = new MockMcpServer();
+    registerInvoiceTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_list_invoices", {
+      companySlug: "acme",
+      date: "not-a-date",
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("YYYY-MM-DD");
+  });
+});
+
 // --- error propagation ---
 
 describe("error handling", () => {

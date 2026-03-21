@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { PaginationSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerCompanyTools(server: McpServer, client: FikenClient): void {
@@ -19,11 +19,9 @@ export function registerCompanyTools(server: McpServer, client: FikenClient): vo
   server.tool(
     "fiken_get_company",
     "Get details for a specific company by slug",
-    {
-      companySlug: z.string().describe("Company slug. Use fiken_list_companies to discover slugs."),
-    },
+    CompanySlugSchema.shape,
     wrapToolError(async (args) => {
-      const { companySlug } = z.object({ companySlug: z.string() }).parse(args);
+      const { companySlug } = CompanySlugSchema.parse(args);
       const data = await client.get(`/companies/${companySlug}`);
       return toText(data);
     })

@@ -20,12 +20,13 @@ export function registerCreditNoteTools(server: McpServer, client: FikenClient):
       settled: z.boolean().optional().describe("Filter by settled status"),
     },
     wrapToolError(async (args) => {
+      const datePattern = /^\d{4}-\d{2}-\d{2}$/;
       const schema = CompanySlugSchema.merge(PaginationSchema).extend({
-        issueDate: z.string().optional(),
-        issueDateLe: z.string().optional(),
-        issueDateLt: z.string().optional(),
-        issueDateGe: z.string().optional(),
-        issueDateGt: z.string().optional(),
+        issueDate: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
+        issueDateLe: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
+        issueDateLt: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
+        issueDateGe: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
+        issueDateGt: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
         customerId: z.number().int().optional(),
         settled: z.boolean().optional(),
       });

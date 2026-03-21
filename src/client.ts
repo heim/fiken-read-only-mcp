@@ -40,6 +40,14 @@ export class FikenClient {
     params?: Record<string, string | number | boolean | undefined>
   ): Promise<{ data: T; headers: Headers }> {
     const url = new URL(`${FIKEN_BASE_URL}${path}`);
+
+    // Defense-in-depth: ensure the resolved URL stays within the Fiken API scope.
+    // new URL() resolves ".." segments, so a path like /companies/../../admin
+    // would resolve to a URL outside the base path.
+    if (!url.href.startsWith(FIKEN_BASE_URL)) {
+      throw new Error("URL path traversal detected: resolved URL escapes API base path");
+    }
+
     if (params) {
       for (const [key, value] of Object.entries(params)) {
         if (value !== undefined) {

@@ -178,6 +178,22 @@ describe("FikenClient", () => {
     });
   });
 
+  describe("URL path traversal protection", () => {
+    it("rejects paths that resolve outside the API base", async () => {
+      const client = new FikenClient("token");
+      await expect(
+        client.get("/companies/../../admin/secrets")
+      ).rejects.toThrow("URL path traversal detected");
+    });
+
+    it("allows normal paths within the API base", async () => {
+      vi.stubGlobal("fetch", mockFetch({ id: 1 }));
+      const client = new FikenClient("token");
+      const result = await client.get("/companies/acme/invoices");
+      expect(result).toEqual({ id: 1 });
+    });
+  });
+
   describe("serial queue", () => {
     it("executes requests sequentially (no concurrent requests)", async () => {
       const order: number[] = [];

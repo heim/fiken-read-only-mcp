@@ -41,7 +41,7 @@ export function registerAccountTools(server: McpServer, client: FikenClient): vo
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({
-        accountCode: z.string(),
+        accountCode: z.string().regex(/^[0-9:]+$/, "Account code must contain only digits and colons"),
         year: z.number().int().optional(),
       });
       const { companySlug, accountCode, year } = schema.parse(args);
@@ -89,7 +89,7 @@ export function registerAccountTools(server: McpServer, client: FikenClient): vo
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({
-        accountCode: z.string(),
+        accountCode: z.string().regex(/^[0-9:]+$/, "Account code must contain only digits and colons"),
         year: z.number().int().optional(),
       });
       const { companySlug, accountCode, year } = schema.parse(args);
