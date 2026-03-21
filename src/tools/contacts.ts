@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, LastModifiedSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, LastModifiedSchema, stringFilter } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerContactTools(server: McpServer, client: FikenClient): void {
@@ -12,29 +12,29 @@ export function registerContactTools(server: McpServer, client: FikenClient): vo
       ...CompanySlugSchema.shape,
       ...PaginationSchema.shape,
       ...LastModifiedSchema.shape,
-      name: z.string().optional().describe("Filter by contact name"),
-      email: z.string().optional().describe("Filter by email address"),
-      organizationNumber: z.string().optional().describe("Filter by organization number"),
+      name: stringFilter("Filter by contact name"),
+      email: stringFilter("Filter by email address"),
+      organizationNumber: stringFilter("Filter by organization number"),
       customerNumber: z.number().int().optional().describe("Filter by customer number"),
       memberNumber: z.number().int().optional().describe("Filter by member number"),
       supplierNumber: z.number().int().optional().describe("Filter by supplier number"),
       customer: z.boolean().optional().describe("Filter to only customers"),
       supplier: z.boolean().optional().describe("Filter to only suppliers"),
       inactive: z.boolean().optional().describe("Include inactive contacts"),
-      group: z.string().optional().describe("Filter by group name"),
+      group: stringFilter("Filter by group name"),
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(LastModifiedSchema).extend({
-        name: z.string().optional(),
-        email: z.string().optional(),
-        organizationNumber: z.string().optional(),
+        name: stringFilter("Filter by contact name"),
+        email: stringFilter("Filter by email address"),
+        organizationNumber: stringFilter("Filter by organization number"),
         customerNumber: z.number().int().optional(),
         memberNumber: z.number().int().optional(),
         supplierNumber: z.number().int().optional(),
         customer: z.boolean().optional(),
         supplier: z.boolean().optional(),
         inactive: z.boolean().optional(),
-        group: z.string().optional(),
+        group: stringFilter("Filter by group name"),
       });
       const { companySlug, page, pageSize, ...filters } = schema.parse(args);
       const data = await client.getPaginated(

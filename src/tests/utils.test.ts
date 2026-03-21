@@ -33,15 +33,16 @@ describe("wrapToolError()", () => {
     expect(result.isError).toBeUndefined();
   });
 
-  it("catches FikenApiError and returns isError=true", async () => {
+  it("catches FikenApiError and returns sanitized error", async () => {
     const handler = wrapToolError(async () => {
       throw new FikenApiError(404, "Not Found", "resource not found");
     });
     const result = await handler({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("404");
-    expect(result.content[0].text).toContain("Not Found");
-    expect(result.content[0].text).toContain("resource not found");
+    expect(result.content[0].text).toContain("Resource not found");
+    // Raw body should NOT be exposed to the client
+    expect(result.content[0].text).not.toContain("resource not found");
   });
 
   it("catches generic Error and returns isError=true", async () => {

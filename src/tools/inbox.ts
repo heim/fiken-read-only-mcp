@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, stringFilter } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerInboxTools(server: McpServer, client: FikenClient): void {
@@ -11,15 +11,15 @@ export function registerInboxTools(server: McpServer, client: FikenClient): void
     {
       ...CompanySlugSchema.shape,
       ...PaginationSchema.shape,
-      name: z.string().optional().describe("Filter by document name"),
-      description: z.string().optional().describe("Filter by document description"),
-      status: z.string().optional().describe("Filter by document status"),
+      name: stringFilter("Filter by document name"),
+      description: stringFilter("Filter by document description"),
+      status: stringFilter("Filter by document status"),
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).extend({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        status: z.string().optional(),
+        name: stringFilter("Filter by document name"),
+        description: stringFilter("Filter by document description"),
+        status: stringFilter("Filter by document status"),
       });
       const { companySlug, page, pageSize, ...filters } = schema.parse(args);
       const data = await client.getPaginated(

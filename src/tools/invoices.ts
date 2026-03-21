@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema, stringFilter } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerInvoiceTools(server: McpServer, client: FikenClient): void {
@@ -13,20 +13,20 @@ export function registerInvoiceTools(server: McpServer, client: FikenClient): vo
       ...PaginationSchema.shape,
       ...DateRangeSchema.shape,
       ...LastModifiedSchema.shape,
-      invoiceNumber: z.string().optional().describe("Filter by invoice number"),
-      kid: z.string().optional().describe("Filter by KID/payment reference"),
+      invoiceNumber: stringFilter("Filter by invoice number"),
+      kid: stringFilter("Filter by KID/payment reference"),
       customerId: z.number().int().optional().describe("Filter by customer contact ID"),
       settled: z.boolean().optional().describe("Filter by settled status"),
-      orderReference: z.string().optional().describe("Filter by order reference"),
+      orderReference: stringFilter("Filter by order reference"),
       projectId: z.number().int().optional().describe("Filter by project ID"),
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
-        invoiceNumber: z.string().optional(),
-        kid: z.string().optional(),
+        invoiceNumber: stringFilter("Filter by invoice number"),
+        kid: stringFilter("Filter by KID/payment reference"),
         customerId: z.number().int().optional(),
         settled: z.boolean().optional(),
-        orderReference: z.string().optional(),
+        orderReference: stringFilter("Filter by order reference"),
         projectId: z.number().int().optional(),
       });
       const { companySlug, page, pageSize, ...filters } = schema.parse(args);

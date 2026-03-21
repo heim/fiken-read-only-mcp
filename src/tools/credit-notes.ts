@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, IssueDateSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerCreditNoteTools(server: McpServer, client: FikenClient): void {
@@ -11,22 +11,12 @@ export function registerCreditNoteTools(server: McpServer, client: FikenClient):
     {
       ...CompanySlugSchema.shape,
       ...PaginationSchema.shape,
-      issueDate: z.string().optional().describe("Filter by issue date (YYYY-MM-DD)"),
-      issueDateLe: z.string().optional().describe("Issue date less than or equal (YYYY-MM-DD)"),
-      issueDateLt: z.string().optional().describe("Issue date less than (YYYY-MM-DD)"),
-      issueDateGe: z.string().optional().describe("Issue date greater than or equal (YYYY-MM-DD)"),
-      issueDateGt: z.string().optional().describe("Issue date greater than (YYYY-MM-DD)"),
+      ...IssueDateSchema.shape,
       customerId: z.number().int().optional().describe("Filter by customer contact ID"),
       settled: z.boolean().optional().describe("Filter by settled status"),
     },
     wrapToolError(async (args) => {
-      const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-      const schema = CompanySlugSchema.merge(PaginationSchema).extend({
-        issueDate: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
-        issueDateLe: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
-        issueDateLt: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
-        issueDateGe: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
-        issueDateGt: z.string().regex(datePattern, "Date must be in YYYY-MM-DD format").optional(),
+      const schema = CompanySlugSchema.merge(PaginationSchema).merge(IssueDateSchema).extend({
         customerId: z.number().int().optional(),
         settled: z.boolean().optional(),
       });

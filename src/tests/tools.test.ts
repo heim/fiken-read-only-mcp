@@ -11,6 +11,9 @@ import { registerBankTools } from "../tools/bank.js";
 import { registerSaleTools } from "../tools/sales.js";
 import { registerPurchaseTools } from "../tools/purchases.js";
 import { registerInboxTools } from "../tools/inbox.js";
+import { registerProductTools } from "../tools/products.js";
+import { registerProjectTools } from "../tools/projects.js";
+import { registerCreditNoteTools } from "../tools/credit-notes.js";
 import { FikenApiError } from "../client.js";
 
 // --- user ---
@@ -361,7 +364,7 @@ describe("input validation", () => {
 // --- error propagation ---
 
 describe("error handling", () => {
-  it("returns isError=true when API call fails", async () => {
+  it("returns isError=true with sanitized message when API call fails", async () => {
     const client = createMockClient({
       get: vi.fn().mockRejectedValue(new FikenApiError(500, "Internal Server Error", "oops")),
     });
@@ -371,7 +374,9 @@ describe("error handling", () => {
     const result = await server.call("fiken_get_user", {});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("500");
-    expect(result.content[0].text).toContain("oops");
+    expect(result.content[0].text).toContain("Internal server error");
+    // Raw body should NOT be exposed
+    expect(result.content[0].text).not.toContain("oops");
   });
 
   it("returns isError=true on network error", async () => {
@@ -384,5 +389,89 @@ describe("error handling", () => {
     const result = await server.call("fiken_get_user", {});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toBe("fetch failed");
+  });
+});
+
+// --- string filter validation ---
+
+describe("string filter length limits", () => {
+  it("rejects string filter exceeding 200 characters", async () => {
+    const client = createMockClient();
+    const server = new MockMcpServer();
+    registerContactTools(server as unknown as McpServer, client);
+
+    const longName = "a".repeat(201);
+    const result = await server.call("fiken_list_contacts", {
+      companySlug: "acme",
+      name: longName,
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("at most 200 characters");
+  });
+
+  it("accepts string filter at exactly 200 characters", async () => {
+    const client = createMockClient();
+    const server = new MockMcpServer();
+    registerContactTools(server as unknown as McpServer, client);
+
+    const name = "a".repeat(200);
+    const result = await server.call("fiken_list_contacts", {
+      companySlug: "acme",
+      name,
+    });
+    expect(result.isError).toBeUndefined();
+  });
+
+  it("rejects long product name filter", async () => {
+    const client = createMockClient();
+    const server = new MockMcpServer();
+    registerProductTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_list_products", {
+      companySlug: "acme",
+      name: "x".repeat(201),
+    });
+    expect(result.isError).toBe(true);
+  });
+
+  it("rejects long inbox description filter", async () => {
+    const client = createMockClient();
+    const server = new MockMcpServer();
+    registerInboxTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_list_inbox", {
+      companySlug: "acme",
+      description: "x".repeat(201),
+    });
+    expect(result.isError).toBe(true);
+  });
+});
+
+// --- credit note issue date validation ---
+
+describe("credit note issue date validation", () => {
+  it("rejects invalid issueDate format", async () => {
+    const client = createMockClient();
+    const server = new MockMcpServer();
+    registerCreditNoteTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_list_credit_notes", {
+      companySlug: "acme",
+      issueDate: "not-a-date",
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("YYYY-MM-DD");
+  });
+
+  it("accepts valid issueDate format", async () => {
+    const client = createMockClient();
+    const server = new MockMcpServer();
+    registerCreditNoteTools(server as unknown as McpServer, client);
+
+    const result = await server.call("fiken_list_credit_notes", {
+      companySlug: "acme",
+      issueDate: "2024-06-15",
+    });
+    expect(result.isError).toBeUndefined();
   });
 });

@@ -1,3 +1,5 @@
+import { logger } from "./logger.js";
+
 const FIKEN_BASE_URL = "https://api.fiken.no/api/v2";
 
 export class FikenApiError extends Error {
@@ -56,6 +58,8 @@ export class FikenClient {
       }
     }
 
+    logger.info("api_request", { method: "GET", path });
+
     const response = await fetch(url.toString(), {
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -65,8 +69,11 @@ export class FikenClient {
 
     if (!response.ok) {
       const body = await response.text();
+      logger.warn("api_response_error", { path, status: response.status });
       throw new FikenApiError(response.status, response.statusText, body);
     }
+
+    logger.info("api_response_ok", { path, status: response.status });
 
     const data = (await response.json()) as T;
     return { data, headers: response.headers };

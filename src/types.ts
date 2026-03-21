@@ -46,3 +46,19 @@ export const LastModifiedSchema = z.object({
   lastModifiedGe: dateString().optional().describe("lastModified greater than or equal (YYYY-MM-DD)"),
   lastModifiedGt: dateString().optional().describe("lastModified greater than (YYYY-MM-DD)"),
 });
+
+/** Max length for string query filter parameters to prevent abuse */
+const MAX_FILTER_LENGTH = 200;
+
+/** A bounded string filter for query parameters */
+export const stringFilter = (description: string) =>
+  z.string().max(MAX_FILTER_LENGTH, `Filter value must be at most ${MAX_FILTER_LENGTH} characters`).optional().describe(description);
+
+/** Issue-date filter schema (used by credit notes) */
+export const IssueDateSchema = z.object({
+  issueDate: dateString().optional().describe("Filter by issue date (YYYY-MM-DD)"),
+  issueDateLe: dateString().optional().describe("Issue date less than or equal (YYYY-MM-DD)"),
+  issueDateLt: dateString().optional().describe("Issue date less than (YYYY-MM-DD)"),
+  issueDateGe: dateString().optional().describe("Issue date greater than or equal (YYYY-MM-DD)"),
+  issueDateGt: dateString().optional().describe("Issue date greater than (YYYY-MM-DD)"),
+});

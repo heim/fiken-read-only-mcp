@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema, stringFilter } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerSaleTools(server: McpServer, client: FikenClient): void {
@@ -13,13 +13,13 @@ export function registerSaleTools(server: McpServer, client: FikenClient): void 
       ...PaginationSchema.shape,
       ...DateRangeSchema.shape,
       ...LastModifiedSchema.shape,
-      saleNumber: z.string().optional().describe("Filter by sale number"),
+      saleNumber: stringFilter("Filter by sale number"),
       settled: z.boolean().optional().describe("Filter by settled status"),
       projectId: z.number().int().optional().describe("Filter by project ID"),
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
-        saleNumber: z.string().optional(),
+        saleNumber: stringFilter("Filter by sale number"),
         settled: z.boolean().optional(),
         projectId: z.number().int().optional(),
       });
