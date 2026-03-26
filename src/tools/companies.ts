@@ -4,7 +4,9 @@ import { FikenClient } from "../client.js";
 import { PaginationSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListCompaniesSchema = PaginationSchema;
+const ListCompaniesSchema = PaginationSchema.extend({
+  sortBy: z.string().optional().describe("Sort order (e.g. 'name asc', 'createdDate desc')"),
+});
 
 const GetCompanySchema = z.object({
   companySlug: z.string().describe("Company slug. Use fiken_list_companies to discover slugs."),

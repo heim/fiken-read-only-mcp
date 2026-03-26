@@ -1,10 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, LastModifiedSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, LastModifiedSchema, CreatedDateSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListProductsSchema = CompanySlugSchema.merge(PaginationSchema).merge(LastModifiedSchema).extend({
+const ListProductsSchema = CompanySlugSchema.merge(PaginationSchema).merge(LastModifiedSchema).merge(CreatedDateSchema).extend({
   name: z.string().optional().describe("Filter by product name"),
   productNumber: z.string().optional().describe("Filter by product number"),
   active: z.boolean().optional().describe("Filter by active status"),

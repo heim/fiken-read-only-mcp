@@ -1,21 +1,29 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, DateRangeSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListTimeEntriesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).extend({
+const ListTimeEntriesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
   projectId: z.number().int().optional().describe("Filter by project ID"),
-  userId: z.number().int().optional().describe("Filter by user ID"),
+  timeUserId: z.number().int().optional().describe("Filter by time user ID"),
   activityId: z.number().int().optional().describe("Filter by activity ID"),
+  invoiced: z.boolean().optional().describe("Filter by invoiced status"),
 });
 
 const GetTimeEntrySchema = CompanySlugSchema.extend({
   timeEntryId: z.number().int().describe("Time entry ID"),
 });
 
-const ListActivitiesSchema = CompanySlugSchema.merge(PaginationSchema);
-const ListTimeUsersSchema = CompanySlugSchema.merge(PaginationSchema);
+const ListActivitiesSchema = CompanySlugSchema.merge(PaginationSchema).extend({
+  name: z.string().optional().describe("Filter by activity name"),
+  archived: z.boolean().optional().describe("Filter by archived status"),
+});
+
+const ListTimeUsersSchema = CompanySlugSchema.merge(PaginationSchema).extend({
+  name: z.string().optional().describe("Filter by user name"),
+  email: z.string().optional().describe("Filter by email"),
+});
 
 export function registerTimeEntryTools(server: McpServer, client: FikenClient): void {
   server.registerTool(

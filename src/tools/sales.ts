@@ -6,8 +6,9 @@ import { getHandler, listHandler } from "../utils.js";
 
 const ListSalesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
   saleNumber: z.string().optional().describe("Filter by sale number"),
-  settled: z.boolean().optional().describe("Filter by settled status"),
-  projectId: z.number().int().optional().describe("Filter by project ID"),
+  createdDate: z.string().optional().describe("Filter by creation date (YYYY-MM-DD)"),
+  contactId: z.number().int().optional().describe("Filter by contact ID"),
+  sortBy: z.string().optional().describe("Sort order"),
 });
 
 const GetSaleSchema = CompanySlugSchema.extend({

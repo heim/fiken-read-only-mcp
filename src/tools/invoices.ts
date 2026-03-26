@@ -1,27 +1,33 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, LastModifiedSchema, IssueDateSchema, DueDateSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListInvoicesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
-  invoiceNumber: z.string().optional().describe("Filter by invoice number"),
-  kid: z.string().optional().describe("Filter by KID/payment reference"),
-  customerId: z.number().int().optional().describe("Filter by customer contact ID"),
-  settled: z.boolean().optional().describe("Filter by settled status"),
-  orderReference: z.string().optional().describe("Filter by order reference"),
-  projectId: z.number().int().optional().describe("Filter by project ID"),
-});
+const ListInvoicesSchema = CompanySlugSchema.merge(PaginationSchema)
+  .merge(IssueDateSchema)
+  .merge(LastModifiedSchema)
+  .merge(DueDateSchema)
+  .extend({
+    customerId: z.number().int().optional().describe("Filter by customer contact ID"),
+    settled: z.boolean().optional().describe("Filter by settled status"),
+    orderReference: z.string().optional().describe("Filter by order reference"),
+    invoiceDraftUuid: z.string().optional().describe("Filter by invoice draft UUID"),
+    invoiceNumber: z.string().optional().describe("Filter by invoice number"),
+  });
 
 const GetInvoiceSchema = CompanySlugSchema.extend({
   invoiceId: z.number().int().describe("Invoice ID"),
 });
 
+const ListInvoiceDraftsSchema = CompanySlugSchema.merge(PaginationSchema).extend({
+  orderReference: z.string().optional().describe("Filter by order reference"),
+  uuid: z.string().optional().describe("Filter by draft UUID"),
+});
+
 const GetDraftSchema = CompanySlugSchema.extend({
   draftId: z.number().int().describe("Draft ID"),
 });
-
-const ListInvoiceDraftsSchema = CompanySlugSchema.merge(PaginationSchema);
 
 export function registerInvoiceTools(server: McpServer, client: FikenClient): void {
   server.registerTool(

@@ -1,10 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, DateRangeSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, LastModifiedSchema, CreatedDateSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListTransactionsSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema);
+const ListTransactionsSchema = CompanySlugSchema.merge(PaginationSchema)
+  .merge(LastModifiedSchema)
+  .merge(CreatedDateSchema);
 
 const GetTransactionSchema = CompanySlugSchema.extend({
   transactionId: z.number().int().describe("Transaction ID"),

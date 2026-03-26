@@ -1,18 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, IssueDateSchema, LastModifiedSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListCreditNotesSchema = CompanySlugSchema.merge(PaginationSchema).extend({
-  issueDate: z.string().optional().describe("Filter by issue date (YYYY-MM-DD)"),
-  issueDateLe: z.string().optional().describe("Issue date less than or equal (YYYY-MM-DD)"),
-  issueDateLt: z.string().optional().describe("Issue date less than (YYYY-MM-DD)"),
-  issueDateGe: z.string().optional().describe("Issue date greater than or equal (YYYY-MM-DD)"),
-  issueDateGt: z.string().optional().describe("Issue date greater than (YYYY-MM-DD)"),
-  customerId: z.number().int().optional().describe("Filter by customer contact ID"),
-  settled: z.boolean().optional().describe("Filter by settled status"),
-});
+const ListCreditNotesSchema = CompanySlugSchema.merge(PaginationSchema)
+  .merge(IssueDateSchema)
+  .merge(LastModifiedSchema)
+  .extend({
+    customerId: z.number().int().optional().describe("Filter by customer contact ID"),
+    settled: z.boolean().optional().describe("Filter by settled status"),
+    creditNoteDraftUuid: z.string().optional().describe("Filter by credit note draft UUID"),
+  });
 
 const GetCreditNoteSchema = CompanySlugSchema.extend({
   creditNoteId: z.number().int().describe("Credit note ID"),

@@ -1,12 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, CreatedDateSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListPurchasesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
-  settled: z.boolean().optional().describe("Filter by settled status"),
-  projectId: z.number().int().optional().describe("Filter by project ID"),
+const ListPurchasesSchema = CompanySlugSchema.merge(PaginationSchema).merge(CreatedDateSchema).extend({
+  sortBy: z.string().optional().describe("Sort order (e.g. 'createdDate asc')"),
+  date: z.string().optional().describe("Filter by date (YYYY-MM-DD)"),
 });
 
 const GetPurchaseSchema = CompanySlugSchema.extend({

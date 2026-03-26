@@ -1,13 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema } from "../types.js";
+import { CompanySlugSchema, PaginationSchema, CreatedDateSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
-const ListInboxSchema = CompanySlugSchema.merge(PaginationSchema).extend({
+const ListInboxSchema = CompanySlugSchema.merge(PaginationSchema).merge(CreatedDateSchema).extend({
   name: z.string().optional().describe("Filter by document name"),
-  description: z.string().optional().describe("Filter by document description"),
   status: z.string().optional().describe("Filter by document status"),
+  sortBy: z.string().optional().describe("Sort order (e.g. 'createdDate desc', 'name asc')"),
 });
 
 const GetInboxDocumentSchema = CompanySlugSchema.extend({

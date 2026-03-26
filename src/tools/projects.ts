@@ -5,11 +5,9 @@ import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { getHandler, listHandler } from "../utils.js";
 
 const ListProjectsSchema = CompanySlugSchema.merge(PaginationSchema).extend({
+  completed: z.boolean().optional().describe("Filter by completed status"),
   name: z.string().optional().describe("Filter by project name"),
   number: z.string().optional().describe("Filter by project number"),
-  startDate: z.string().optional().describe("Filter by start date (YYYY-MM-DD)"),
-  endDate: z.string().optional().describe("Filter by end date (YYYY-MM-DD)"),
-  completed: z.boolean().optional().describe("Filter by completed status"),
 });
 
 const GetProjectSchema = CompanySlugSchema.extend({
