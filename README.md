@@ -1,12 +1,13 @@
 # fiken-mcp
 
-A **read-only** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for the [Fiken](https://fiken.no) accounting API. Exposes all Fiken GET endpoints as MCP tools so AI assistants (Claude, etc.) can query your accounting data directly.
+A **read-only** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for the [Fiken](https://fiken.no) accounting API. Exposes Fiken GET endpoints as MCP tools so AI assistants (Claude, etc.) can query your accounting data directly.
 
 > **Read-only guarantee:** This server only ever makes HTTP GET requests to the Fiken API. No data is created, modified, or deleted.
 
 ## Features
 
-- 61 tools covering the full Fiken v2 read API
+- 61 tools covering the Fiken v2 read API
+- Tool parameters validated against the [Fiken OpenAPI spec](https://api.fiken.no/api/v2/docs/swagger.yaml) and verified against the live API
 - Multi-company support — `companySlug` is a parameter on every tool
 - Paginated list endpoints with metadata
 - Serial request queue (respects Fiken's 1 concurrent request per user rule)
@@ -20,8 +21,8 @@ A **read-only** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) 
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/fiken-mcp
-cd fiken-mcp
+git clone https://github.com/heim/fiken-read-only-mcp
+cd fiken-read-only-mcp
 npm install
 npm run build
 ```
@@ -37,7 +38,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "fiken": {
       "command": "node",
-      "args": ["/absolute/path/to/fiken-mcp/build/index.js"],
+      "args": ["/absolute/path/to/fiken-read-only-mcp/build/index.js"],
       "env": {
         "FIKEN_API_TOKEN": "your-token-here"
       }
@@ -55,13 +56,7 @@ Config file locations:
 Add the server to your Claude Code project with:
 
 ```bash
-claude mcp add fiken -- node /absolute/path/to/fiken-mcp/build/index.js
-```
-
-Then set the token:
-
-```bash
-claude mcp add fiken -e FIKEN_API_TOKEN=your-token-here -- node /absolute/path/to/fiken-mcp/build/index.js
+claude mcp add fiken -e FIKEN_API_TOKEN=your-token-here -- node /absolute/path/to/fiken-read-only-mcp/build/index.js
 ```
 
 Or if you prefer to keep the config in version control, add it to `.mcp.json` in your project root:
@@ -71,7 +66,7 @@ Or if you prefer to keep the config in version control, add it to `.mcp.json` in
   "mcpServers": {
     "fiken": {
       "command": "node",
-      "args": ["/absolute/path/to/fiken-mcp/build/index.js"],
+      "args": ["/absolute/path/to/fiken-read-only-mcp/build/index.js"],
       "env": {
         "FIKEN_API_TOKEN": "your-token-here"
       }
@@ -136,8 +131,8 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 |------|-------------|
 | `fiken_list_accounts` | List chart of accounts for a company |
 | `fiken_get_account` | Get a specific account by account code |
-| `fiken_list_account_balances` | List account balances for a company |
-| `fiken_get_account_balance` | Get balance for a specific account |
+| `fiken_list_account_balances` | List account balances for a company (requires date) |
+| `fiken_get_account_balance` | Get balance for a specific account (requires date) |
 
 ### Bank
 
@@ -161,7 +156,7 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_invoices` | List invoices |
+| `fiken_list_invoices` | List invoices (filter by issueDate, dueDate, lastModified, settled, etc.) |
 | `fiken_get_invoice` | Get a specific invoice by ID |
 | `fiken_list_invoice_attachments` | List attachments for an invoice |
 | `fiken_get_invoice_counter` | Get the current invoice number counter |
@@ -173,7 +168,7 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_credit_notes` | List credit notes |
+| `fiken_list_credit_notes` | List credit notes (filter by issueDate, lastModified, settled, etc.) |
 | `fiken_get_credit_note` | Get a specific credit note |
 | `fiken_get_credit_note_counter` | Get the current credit note number counter |
 | `fiken_list_credit_note_drafts` | List credit note drafts |
@@ -201,7 +196,7 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_journal_entries` | List journal entries |
+| `fiken_list_journal_entries` | List journal entries (filter by date, lastModified, createdDate) |
 | `fiken_get_journal_entry` | Get a specific journal entry |
 | `fiken_list_journal_entry_attachments` | List attachments for a journal entry |
 
@@ -209,14 +204,14 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_transactions` | List transactions |
+| `fiken_list_transactions` | List transactions (filter by lastModified, createdDate) |
 | `fiken_get_transaction` | Get a specific transaction |
 
 ### Sales
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_sales` | List sales |
+| `fiken_list_sales` | List sales (filter by date, lastModified, contactId, saleNumber) |
 | `fiken_get_sale` | Get a specific sale |
 | `fiken_list_sale_attachments` | List attachments for a sale |
 | `fiken_list_sale_drafts` | List sale drafts |
@@ -227,7 +222,7 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_purchases` | List purchases |
+| `fiken_list_purchases` | List purchases (filter by createdDate, date, sortBy) |
 | `fiken_get_purchase` | Get a specific purchase |
 | `fiken_list_purchase_attachments` | List attachments for a purchase |
 | `fiken_list_purchase_drafts` | List purchase drafts |
@@ -237,30 +232,30 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_products` | List products |
+| `fiken_list_products` | List products (filter by name, productNumber, active, lastModified, createdDate) |
 | `fiken_get_product` | Get a specific product |
 
 ### Projects
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_projects` | List projects |
+| `fiken_list_projects` | List projects (filter by completed, name, number) |
 | `fiken_get_project` | Get a specific project |
 
 ### Time Tracking
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_time_entries` | List time entries |
+| `fiken_list_time_entries` | List time entries (filter by date, timeUserId, projectId, activityId, invoiced) |
 | `fiken_get_time_entry` | Get a specific time entry |
-| `fiken_list_activities` | List activities (used with time entries) |
-| `fiken_list_time_users` | List users who can log time |
+| `fiken_list_activities` | List activities (filter by name, archived) |
+| `fiken_list_time_users` | List users who can log time (filter by name, email) |
 
 ### Inbox
 
 | Tool | Description |
 |------|-------------|
-| `fiken_list_inbox` | List inbox documents |
+| `fiken_list_inbox` | List inbox documents (filter by status, name, createdDate, sortBy) |
 | `fiken_get_inbox_document` | Get a specific inbox document |
 
 ## Notes
@@ -269,14 +264,25 @@ Start with `fiken_list_companies` to get the `companySlug` values needed by all 
 - **Account codes** are strings — e.g. `"1920"` or `"1500:10001"`
 - **Pagination** defaults to page 0, 25 results per page (max 100)
 - **Date filters** use `YYYY-MM-DD` format
+- **Filter params** are validated against the [Fiken OpenAPI spec](https://api.fiken.no/api/v2/docs/swagger.yaml) and tested against the live API
 
 ## Development
 
 ```bash
-npm test          # run tests
+npm test          # run unit tests
 npm run build     # compile TypeScript
 npm run dev       # run without building (uses tsx)
 ```
+
+### API compliance tests
+
+Run integration tests against the live Fiken API to verify parameter correctness:
+
+```bash
+FIKEN_API_TOKEN=your-token-here npx vitest run src/tests/api-compliance.test.ts
+```
+
+These tests are skipped automatically when no token is set.
 
 ## License
 
