@@ -2,45 +2,34 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
 import { CompanySlugSchema, PaginationSchema, DateRangeSchema } from "../types.js";
-import { wrapToolError, toText } from "../utils.js";
+import { getHandler, listHandler } from "../utils.js";
+
+const ListTransactionsSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema);
+
+const GetTransactionSchema = CompanySlugSchema.extend({
+  transactionId: z.number().int().describe("Transaction ID"),
+});
 
 export function registerTransactionTools(server: McpServer, client: FikenClient): void {
   server.registerTool(
     "fiken_list_transactions",
     {
       description: "List transactions for a company. Amounts are in cents.",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        ...PaginationSchema.shape,
-        ...DateRangeSchema.shape,
-      },
+      inputSchema: ListTransactionsSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema);
-      const { companySlug, page, pageSize, ...filters } = schema.parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/transactions`,
-        { page, pageSize },
-        filters
-      );
-      return toText(data);
-    })
+    listHandler(client, ListTransactionsSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/transactions`
+    )
   );
 
   server.registerTool(
     "fiken_get_transaction",
     {
       description: "Get a specific transaction by ID. Amounts are in cents.",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        transactionId: z.number().int().describe("Transaction ID"),
-      },
+      inputSchema: GetTransactionSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ transactionId: z.number().int() });
-      const { companySlug, transactionId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/transactions/${transactionId}`);
-      return toText(data);
-    })
+    getHandler(client, GetTransactionSchema, ({ companySlug, transactionId }) =>
+      `/companies/${companySlug}/transactions/${transactionId}`
+    )
   );
 }

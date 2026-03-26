@@ -24,7 +24,7 @@ describe("fiken_get_user", () => {
     registerUserTools(server as unknown as McpServer, client);
 
     const result = await server.call("fiken_get_user", {});
-    expect(client.get).toHaveBeenCalledWith("/user");
+    expect(client.get).toHaveBeenCalledWith("/user", undefined);
     expect(JSON.parse(result.content[0].text)).toEqual({
       name: "Test User",
       email: "t@t.com",
@@ -46,7 +46,7 @@ describe("fiken_list_companies", () => {
     expect(client.getPaginated).toHaveBeenCalledWith("/companies", {
       page: 0,
       pageSize: 25,
-    });
+    }, {});
   });
 
   it("returns company list in response", async () => {
@@ -72,7 +72,7 @@ describe("fiken_get_company", () => {
     registerCompanyTools(server as unknown as McpServer, client);
 
     await server.call("fiken_get_company", { companySlug: "acme" });
-    expect(client.get).toHaveBeenCalledWith("/companies/acme");
+    expect(client.get).toHaveBeenCalledWith("/companies/acme", undefined);
   });
 });
 
@@ -127,7 +127,7 @@ describe("fiken_list_bank_balances", () => {
     registerBankTools(server as unknown as McpServer, client);
 
     await server.call("fiken_list_bank_balances", { companySlug: "acme" });
-    expect(client.get).toHaveBeenCalledWith("/companies/acme/bankBalances");
+    expect(client.get).toHaveBeenCalledWith("/companies/acme/bankBalances", undefined);
   });
 });
 
@@ -165,7 +165,7 @@ describe("fiken_get_contact_person", () => {
       contactPersonId: 7,
     });
     expect(client.get).toHaveBeenCalledWith(
-      "/companies/acme/contacts/42/contactPerson/7"
+      "/companies/acme/contacts/42/contactPerson/7", undefined
     );
   });
 });
@@ -204,7 +204,7 @@ describe("fiken_get_invoice_counter", () => {
     registerInvoiceTools(server as unknown as McpServer, client);
 
     await server.call("fiken_get_invoice_counter", { companySlug: "acme" });
-    expect(client.get).toHaveBeenCalledWith("/companies/acme/invoices/counter");
+    expect(client.get).toHaveBeenCalledWith("/companies/acme/invoices/counter", undefined);
   });
 });
 
@@ -219,7 +219,7 @@ describe("fiken_list_invoice_attachments", () => {
       invoiceId: 99,
     });
     expect(client.get).toHaveBeenCalledWith(
-      "/companies/acme/invoices/99/attachments"
+      "/companies/acme/invoices/99/attachments", undefined
     );
   });
 });
@@ -237,7 +237,7 @@ describe("fiken_list_sale_draft_attachments", () => {
       draftId: 5,
     });
     expect(client.get).toHaveBeenCalledWith(
-      "/companies/acme/sales/drafts/5/attachments"
+      "/companies/acme/sales/drafts/5/attachments", undefined
     );
   });
 });

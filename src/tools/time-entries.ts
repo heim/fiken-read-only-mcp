@@ -2,90 +2,63 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
 import { CompanySlugSchema, PaginationSchema, DateRangeSchema } from "../types.js";
-import { wrapToolError, toText } from "../utils.js";
+import { getHandler, listHandler } from "../utils.js";
+
+const ListTimeEntriesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).extend({
+  projectId: z.number().int().optional().describe("Filter by project ID"),
+  userId: z.number().int().optional().describe("Filter by user ID"),
+  activityId: z.number().int().optional().describe("Filter by activity ID"),
+});
+
+const GetTimeEntrySchema = CompanySlugSchema.extend({
+  timeEntryId: z.number().int().describe("Time entry ID"),
+});
+
+const ListActivitiesSchema = CompanySlugSchema.merge(PaginationSchema);
+const ListTimeUsersSchema = CompanySlugSchema.merge(PaginationSchema);
 
 export function registerTimeEntryTools(server: McpServer, client: FikenClient): void {
   server.registerTool(
     "fiken_list_time_entries",
     {
       description: "List time entries for a company",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        ...PaginationSchema.shape,
-        ...DateRangeSchema.shape,
-        projectId: z.number().int().optional().describe("Filter by project ID"),
-        userId: z.number().int().optional().describe("Filter by user ID"),
-        activityId: z.number().int().optional().describe("Filter by activity ID"),
-      },
+      inputSchema: ListTimeEntriesSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).extend({
-        projectId: z.number().int().optional(),
-        userId: z.number().int().optional(),
-        activityId: z.number().int().optional(),
-      });
-      const { companySlug, page, pageSize, ...filters } = schema.parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/timeEntries`,
-        { page, pageSize },
-        filters
-      );
-      return toText(data);
-    })
+    listHandler(client, ListTimeEntriesSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/timeEntries`
+    )
   );
 
   server.registerTool(
     "fiken_get_time_entry",
     {
       description: "Get a specific time entry by ID",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        timeEntryId: z.number().int().describe("Time entry ID"),
-      },
+      inputSchema: GetTimeEntrySchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ timeEntryId: z.number().int() });
-      const { companySlug, timeEntryId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/timeEntries/${timeEntryId}`);
-      return toText(data);
-    })
+    getHandler(client, GetTimeEntrySchema, ({ companySlug, timeEntryId }) =>
+      `/companies/${companySlug}/timeEntries/${timeEntryId}`
+    )
   );
 
   server.registerTool(
     "fiken_list_activities",
     {
       description: "List activities for a company (used with time entries)",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        ...PaginationSchema.shape,
-      },
+      inputSchema: ListActivitiesSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/activities`,
-        { page, pageSize }
-      );
-      return toText(data);
-    })
+    listHandler(client, ListActivitiesSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/activities`
+    )
   );
 
   server.registerTool(
     "fiken_list_time_users",
     {
       description: "List users who can log time for a company",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        ...PaginationSchema.shape,
-      },
+      inputSchema: ListTimeUsersSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/timeUsers`,
-        { page, pageSize }
-      );
-      return toText(data);
-    })
+    listHandler(client, ListTimeUsersSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/timeUsers`
+    )
   );
 }

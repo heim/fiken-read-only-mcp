@@ -2,125 +2,88 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
 import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema } from "../types.js";
-import { wrapToolError, toText } from "../utils.js";
+import { getHandler, listHandler } from "../utils.js";
+
+const ListSalesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
+  saleNumber: z.string().optional().describe("Filter by sale number"),
+  settled: z.boolean().optional().describe("Filter by settled status"),
+  projectId: z.number().int().optional().describe("Filter by project ID"),
+});
+
+const GetSaleSchema = CompanySlugSchema.extend({
+  saleId: z.number().int().describe("Sale ID"),
+});
+
+const GetDraftSchema = CompanySlugSchema.extend({
+  draftId: z.number().int().describe("Draft ID"),
+});
+
+const ListSaleDraftsSchema = CompanySlugSchema.merge(PaginationSchema);
 
 export function registerSaleTools(server: McpServer, client: FikenClient): void {
   server.registerTool(
     "fiken_list_sales",
     {
       description: "List sales for a company. Amounts are in cents.",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        ...PaginationSchema.shape,
-        ...DateRangeSchema.shape,
-        ...LastModifiedSchema.shape,
-        saleNumber: z.string().optional().describe("Filter by sale number"),
-        settled: z.boolean().optional().describe("Filter by settled status"),
-        projectId: z.number().int().optional().describe("Filter by project ID"),
-      },
+      inputSchema: ListSalesSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
-        saleNumber: z.string().optional(),
-        settled: z.boolean().optional(),
-        projectId: z.number().int().optional(),
-      });
-      const { companySlug, page, pageSize, ...filters } = schema.parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/sales`,
-        { page, pageSize },
-        filters
-      );
-      return toText(data);
-    })
+    listHandler(client, ListSalesSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/sales`
+    )
   );
 
   server.registerTool(
     "fiken_get_sale",
     {
       description: "Get a specific sale by ID. Amounts are in cents.",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        saleId: z.number().int().describe("Sale ID"),
-      },
+      inputSchema: GetSaleSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ saleId: z.number().int() });
-      const { companySlug, saleId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/sales/${saleId}`);
-      return toText(data);
-    })
+    getHandler(client, GetSaleSchema, ({ companySlug, saleId }) =>
+      `/companies/${companySlug}/sales/${saleId}`
+    )
   );
 
   server.registerTool(
     "fiken_list_sale_attachments",
     {
       description: "List attachments for a specific sale",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        saleId: z.number().int().describe("Sale ID"),
-      },
+      inputSchema: GetSaleSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ saleId: z.number().int() });
-      const { companySlug, saleId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/sales/${saleId}/attachments`);
-      return toText(data);
-    })
+    getHandler(client, GetSaleSchema, ({ companySlug, saleId }) =>
+      `/companies/${companySlug}/sales/${saleId}/attachments`
+    )
   );
 
   server.registerTool(
     "fiken_list_sale_drafts",
     {
       description: "List sale drafts for a company",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        ...PaginationSchema.shape,
-      },
+      inputSchema: ListSaleDraftsSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/sales/drafts`,
-        { page, pageSize }
-      );
-      return toText(data);
-    })
+    listHandler(client, ListSaleDraftsSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/sales/drafts`
+    )
   );
 
   server.registerTool(
     "fiken_get_sale_draft",
     {
       description: "Get a specific sale draft by ID",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        draftId: z.number().int().describe("Draft ID"),
-      },
+      inputSchema: GetDraftSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ draftId: z.number().int() });
-      const { companySlug, draftId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/sales/drafts/${draftId}`);
-      return toText(data);
-    })
+    getHandler(client, GetDraftSchema, ({ companySlug, draftId }) =>
+      `/companies/${companySlug}/sales/drafts/${draftId}`
+    )
   );
 
   server.registerTool(
     "fiken_list_sale_draft_attachments",
     {
       description: "List attachments for a specific sale draft",
-      inputSchema: {
-        ...CompanySlugSchema.shape,
-        draftId: z.number().int().describe("Draft ID"),
-      },
+      inputSchema: GetDraftSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ draftId: z.number().int() });
-      const { companySlug, draftId } = schema.parse(args);
-      const data = await client.get(
-        `/companies/${companySlug}/sales/drafts/${draftId}/attachments`
-      );
-      return toText(data);
-    })
+    getHandler(client, GetDraftSchema, ({ companySlug, draftId }) =>
+      `/companies/${companySlug}/sales/drafts/${draftId}/attachments`
+    )
   );
 }
