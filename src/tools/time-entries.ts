@@ -5,16 +5,18 @@ import { CompanySlugSchema, PaginationSchema, DateRangeSchema } from "../types.j
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerTimeEntryTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_time_entries",
-    "List time entries for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...DateRangeSchema.shape,
-      projectId: z.number().int().optional().describe("Filter by project ID"),
-      userId: z.number().int().optional().describe("Filter by user ID"),
-      activityId: z.number().int().optional().describe("Filter by activity ID"),
+      description: "List time entries for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        ...DateRangeSchema.shape,
+        projectId: z.number().int().optional().describe("Filter by project ID"),
+        userId: z.number().int().optional().describe("Filter by user ID"),
+        activityId: z.number().int().optional().describe("Filter by activity ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).extend({
@@ -32,12 +34,14 @@ export function registerTimeEntryTools(server: McpServer, client: FikenClient): 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_time_entry",
-    "Get a specific time entry by ID",
     {
-      ...CompanySlugSchema.shape,
-      timeEntryId: z.number().int().describe("Time entry ID"),
+      description: "Get a specific time entry by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        timeEntryId: z.number().int().describe("Time entry ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ timeEntryId: z.number().int() });
@@ -47,12 +51,14 @@ export function registerTimeEntryTools(server: McpServer, client: FikenClient): 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_activities",
-    "List activities for a company (used with time entries)",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List activities for a company (used with time entries)",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
@@ -64,12 +70,14 @@ export function registerTimeEntryTools(server: McpServer, client: FikenClient): 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_time_users",
-    "List users who can log time for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List users who can log time for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);

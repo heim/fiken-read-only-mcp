@@ -5,23 +5,25 @@ import { CompanySlugSchema, PaginationSchema, LastModifiedSchema } from "../type
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerContactTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_contacts",
-    "List contacts (customers and suppliers) for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...LastModifiedSchema.shape,
-      name: z.string().optional().describe("Filter by contact name"),
-      email: z.string().optional().describe("Filter by email address"),
-      organizationNumber: z.string().optional().describe("Filter by organization number"),
-      customerNumber: z.number().int().optional().describe("Filter by customer number"),
-      memberNumber: z.number().int().optional().describe("Filter by member number"),
-      supplierNumber: z.number().int().optional().describe("Filter by supplier number"),
-      customer: z.boolean().optional().describe("Filter to only customers"),
-      supplier: z.boolean().optional().describe("Filter to only suppliers"),
-      inactive: z.boolean().optional().describe("Include inactive contacts"),
-      group: z.string().optional().describe("Filter by group name"),
+      description: "List contacts (customers and suppliers) for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        ...LastModifiedSchema.shape,
+        name: z.string().optional().describe("Filter by contact name"),
+        email: z.string().optional().describe("Filter by email address"),
+        organizationNumber: z.string().optional().describe("Filter by organization number"),
+        customerNumber: z.number().int().optional().describe("Filter by customer number"),
+        memberNumber: z.number().int().optional().describe("Filter by member number"),
+        supplierNumber: z.number().int().optional().describe("Filter by supplier number"),
+        customer: z.boolean().optional().describe("Filter to only customers"),
+        supplier: z.boolean().optional().describe("Filter to only suppliers"),
+        inactive: z.boolean().optional().describe("Include inactive contacts"),
+        group: z.string().optional().describe("Filter by group name"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(LastModifiedSchema).extend({
@@ -46,12 +48,14 @@ export function registerContactTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_contact",
-    "Get a specific contact by ID",
     {
-      ...CompanySlugSchema.shape,
-      contactId: z.number().int().describe("Contact ID"),
+      description: "Get a specific contact by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        contactId: z.number().int().describe("Contact ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ contactId: z.number().int() });
@@ -61,12 +65,14 @@ export function registerContactTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_contact_persons",
-    "List contact persons for a specific contact",
     {
-      ...CompanySlugSchema.shape,
-      contactId: z.number().int().describe("Contact ID"),
+      description: "List contact persons for a specific contact",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        contactId: z.number().int().describe("Contact ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ contactId: z.number().int() });
@@ -76,13 +82,15 @@ export function registerContactTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_contact_person",
-    "Get a specific contact person by ID",
     {
-      ...CompanySlugSchema.shape,
-      contactId: z.number().int().describe("Contact ID"),
-      contactPersonId: z.number().int().describe("Contact person ID"),
+      description: "Get a specific contact person by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        contactId: z.number().int().describe("Contact ID"),
+        contactPersonId: z.number().int().describe("Contact person ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({
@@ -97,12 +105,14 @@ export function registerContactTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_contact_groups",
-    "List contact groups for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List contact groups for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);

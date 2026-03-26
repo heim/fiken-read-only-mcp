@@ -5,19 +5,21 @@ import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerCreditNoteTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_credit_notes",
-    "List credit notes for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      issueDate: z.string().optional().describe("Filter by issue date (YYYY-MM-DD)"),
-      issueDateLe: z.string().optional().describe("Issue date less than or equal (YYYY-MM-DD)"),
-      issueDateLt: z.string().optional().describe("Issue date less than (YYYY-MM-DD)"),
-      issueDateGe: z.string().optional().describe("Issue date greater than or equal (YYYY-MM-DD)"),
-      issueDateGt: z.string().optional().describe("Issue date greater than (YYYY-MM-DD)"),
-      customerId: z.number().int().optional().describe("Filter by customer contact ID"),
-      settled: z.boolean().optional().describe("Filter by settled status"),
+      description: "List credit notes for a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        issueDate: z.string().optional().describe("Filter by issue date (YYYY-MM-DD)"),
+        issueDateLe: z.string().optional().describe("Issue date less than or equal (YYYY-MM-DD)"),
+        issueDateLt: z.string().optional().describe("Issue date less than (YYYY-MM-DD)"),
+        issueDateGe: z.string().optional().describe("Issue date greater than or equal (YYYY-MM-DD)"),
+        issueDateGt: z.string().optional().describe("Issue date greater than (YYYY-MM-DD)"),
+        customerId: z.number().int().optional().describe("Filter by customer contact ID"),
+        settled: z.boolean().optional().describe("Filter by settled status"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).extend({
@@ -39,12 +41,14 @@ export function registerCreditNoteTools(server: McpServer, client: FikenClient):
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_credit_note",
-    "Get a specific credit note by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      creditNoteId: z.number().int().describe("Credit note ID"),
+      description: "Get a specific credit note by ID. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        creditNoteId: z.number().int().describe("Credit note ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ creditNoteId: z.number().int() });
@@ -54,11 +58,13 @@ export function registerCreditNoteTools(server: McpServer, client: FikenClient):
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_credit_note_counter",
-    "Get the current credit note counter/number sequence for a company",
     {
-      ...CompanySlugSchema.shape,
+      description: "Get the current credit note counter/number sequence for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug } = CompanySlugSchema.parse(args);
@@ -67,12 +73,14 @@ export function registerCreditNoteTools(server: McpServer, client: FikenClient):
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_credit_note_drafts",
-    "List credit note drafts for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List credit note drafts for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
@@ -84,12 +92,14 @@ export function registerCreditNoteTools(server: McpServer, client: FikenClient):
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_credit_note_draft",
-    "Get a specific credit note draft by ID",
     {
-      ...CompanySlugSchema.shape,
-      draftId: z.number().int().describe("Draft ID"),
+      description: "Get a specific credit note draft by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        draftId: z.number().int().describe("Draft ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ draftId: z.number().int() });

@@ -5,17 +5,19 @@ import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchem
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerSaleTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_sales",
-    "List sales for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...DateRangeSchema.shape,
-      ...LastModifiedSchema.shape,
-      saleNumber: z.string().optional().describe("Filter by sale number"),
-      settled: z.boolean().optional().describe("Filter by settled status"),
-      projectId: z.number().int().optional().describe("Filter by project ID"),
+      description: "List sales for a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        ...DateRangeSchema.shape,
+        ...LastModifiedSchema.shape,
+        saleNumber: z.string().optional().describe("Filter by sale number"),
+        settled: z.boolean().optional().describe("Filter by settled status"),
+        projectId: z.number().int().optional().describe("Filter by project ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
@@ -33,12 +35,14 @@ export function registerSaleTools(server: McpServer, client: FikenClient): void 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_sale",
-    "Get a specific sale by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      saleId: z.number().int().describe("Sale ID"),
+      description: "Get a specific sale by ID. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        saleId: z.number().int().describe("Sale ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ saleId: z.number().int() });
@@ -48,12 +52,14 @@ export function registerSaleTools(server: McpServer, client: FikenClient): void 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_sale_attachments",
-    "List attachments for a specific sale",
     {
-      ...CompanySlugSchema.shape,
-      saleId: z.number().int().describe("Sale ID"),
+      description: "List attachments for a specific sale",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        saleId: z.number().int().describe("Sale ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ saleId: z.number().int() });
@@ -63,12 +69,14 @@ export function registerSaleTools(server: McpServer, client: FikenClient): void 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_sale_drafts",
-    "List sale drafts for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List sale drafts for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
@@ -80,12 +88,14 @@ export function registerSaleTools(server: McpServer, client: FikenClient): void 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_sale_draft",
-    "Get a specific sale draft by ID",
     {
-      ...CompanySlugSchema.shape,
-      draftId: z.number().int().describe("Draft ID"),
+      description: "Get a specific sale draft by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        draftId: z.number().int().describe("Draft ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ draftId: z.number().int() });
@@ -95,12 +105,14 @@ export function registerSaleTools(server: McpServer, client: FikenClient): void 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_sale_draft_attachments",
-    "List attachments for a specific sale draft",
     {
-      ...CompanySlugSchema.shape,
-      draftId: z.number().int().describe("Draft ID"),
+      description: "List attachments for a specific sale draft",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        draftId: z.number().int().describe("Draft ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ draftId: z.number().int() });

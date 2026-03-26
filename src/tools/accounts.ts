@@ -5,15 +5,17 @@ import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerAccountTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_accounts",
-    "List chart of accounts for a company. Account codes are strings (e.g. '1920').",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      fromAccount: z.number().optional().describe("Filter accounts from this account number"),
-      toAccount: z.number().optional().describe("Filter accounts to this account number"),
-      year: z.number().int().optional().describe("Fiscal year"),
+      description: "List chart of accounts for a company. Account codes are strings (e.g. '1920').",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        fromAccount: z.number().optional().describe("Filter accounts from this account number"),
+        toAccount: z.number().optional().describe("Filter accounts to this account number"),
+        year: z.number().int().optional().describe("Fiscal year"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).extend({
@@ -31,13 +33,15 @@ export function registerAccountTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_account",
-    "Get a specific account by account code for a company",
     {
-      ...CompanySlugSchema.shape,
-      accountCode: z.string().describe("Account code (e.g. '1920' or '1500:10001')"),
-      year: z.number().int().optional().describe("Fiscal year"),
+      description: "Get a specific account by account code for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        accountCode: z.string().describe("Account code (e.g. '1920' or '1500:10001')"),
+        year: z.number().int().optional().describe("Fiscal year"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({
@@ -53,15 +57,17 @@ export function registerAccountTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_account_balances",
-    "List account balances for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      fromAccount: z.number().optional().describe("Filter from this account number"),
-      toAccount: z.number().optional().describe("Filter to this account number"),
-      year: z.number().int().optional().describe("Fiscal year"),
+      description: "List account balances for a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        fromAccount: z.number().optional().describe("Filter from this account number"),
+        toAccount: z.number().optional().describe("Filter to this account number"),
+        year: z.number().int().optional().describe("Fiscal year"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).extend({
@@ -79,13 +85,15 @@ export function registerAccountTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_account_balance",
-    "Get balance for a specific account. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      accountCode: z.string().describe("Account code (e.g. '1920')"),
-      year: z.number().int().optional().describe("Fiscal year"),
+      description: "Get balance for a specific account. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        accountCode: z.string().describe("Account code (e.g. '1920')"),
+        year: z.number().int().optional().describe("Fiscal year"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({

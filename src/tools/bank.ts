@@ -5,12 +5,14 @@ import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerBankTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_bank_accounts",
-    "List bank accounts for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List bank accounts for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
@@ -22,12 +24,14 @@ export function registerBankTools(server: McpServer, client: FikenClient): void 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_bank_account",
-    "Get a specific bank account by ID",
     {
-      ...CompanySlugSchema.shape,
-      bankAccountId: z.number().int().describe("Bank account ID"),
+      description: "Get a specific bank account by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        bankAccountId: z.number().int().describe("Bank account ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ bankAccountId: z.number().int() });
@@ -37,11 +41,13 @@ export function registerBankTools(server: McpServer, client: FikenClient): void 
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_bank_balances",
-    "List bank balances for all bank accounts of a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
+      description: "List bank balances for all bank accounts of a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug } = CompanySlugSchema.parse(args);

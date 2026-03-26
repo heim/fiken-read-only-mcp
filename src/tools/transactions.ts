@@ -5,13 +5,15 @@ import { CompanySlugSchema, PaginationSchema, DateRangeSchema } from "../types.j
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerTransactionTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_transactions",
-    "List transactions for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...DateRangeSchema.shape,
+      description: "List transactions for a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        ...DateRangeSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema);
@@ -25,12 +27,14 @@ export function registerTransactionTools(server: McpServer, client: FikenClient)
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_transaction",
-    "Get a specific transaction by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      transactionId: z.number().int().describe("Transaction ID"),
+      description: "Get a specific transaction by ID. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        transactionId: z.number().int().describe("Transaction ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ transactionId: z.number().int() });

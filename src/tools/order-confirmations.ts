@@ -5,12 +5,14 @@ import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerOrderConfirmationTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_order_confirmations",
-    "List order confirmations for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List order confirmations for a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
@@ -22,12 +24,14 @@ export function registerOrderConfirmationTools(server: McpServer, client: FikenC
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_order_confirmation",
-    "Get a specific order confirmation by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      confirmationId: z.number().int().describe("Order confirmation ID"),
+      description: "Get a specific order confirmation by ID. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        confirmationId: z.number().int().describe("Order confirmation ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ confirmationId: z.number().int() });
@@ -39,11 +43,13 @@ export function registerOrderConfirmationTools(server: McpServer, client: FikenC
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_order_confirmation_counter",
-    "Get the current order confirmation counter/number sequence for a company",
     {
-      ...CompanySlugSchema.shape,
+      description: "Get the current order confirmation counter/number sequence for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const { companySlug } = CompanySlugSchema.parse(args);

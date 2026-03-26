@@ -5,15 +5,17 @@ import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerInboxTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_inbox",
-    "List inbox documents for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      name: z.string().optional().describe("Filter by document name"),
-      description: z.string().optional().describe("Filter by document description"),
-      status: z.string().optional().describe("Filter by document status"),
+      description: "List inbox documents for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        name: z.string().optional().describe("Filter by document name"),
+        description: z.string().optional().describe("Filter by document description"),
+        status: z.string().optional().describe("Filter by document status"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).extend({
@@ -31,12 +33,14 @@ export function registerInboxTools(server: McpServer, client: FikenClient): void
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_inbox_document",
-    "Get a specific inbox document by ID",
     {
-      ...CompanySlugSchema.shape,
-      inboxDocumentId: z.number().int().describe("Inbox document ID"),
+      description: "Get a specific inbox document by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        inboxDocumentId: z.number().int().describe("Inbox document ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ inboxDocumentId: z.number().int() });

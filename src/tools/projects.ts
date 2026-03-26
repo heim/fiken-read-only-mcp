@@ -5,17 +5,19 @@ import { CompanySlugSchema, PaginationSchema } from "../types.js";
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerProjectTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_projects",
-    "List projects for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      name: z.string().optional().describe("Filter by project name"),
-      number: z.string().optional().describe("Filter by project number"),
-      startDate: z.string().optional().describe("Filter by start date (YYYY-MM-DD)"),
-      endDate: z.string().optional().describe("Filter by end date (YYYY-MM-DD)"),
-      completed: z.boolean().optional().describe("Filter by completed status"),
+      description: "List projects for a company",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        name: z.string().optional().describe("Filter by project name"),
+        number: z.string().optional().describe("Filter by project number"),
+        startDate: z.string().optional().describe("Filter by start date (YYYY-MM-DD)"),
+        endDate: z.string().optional().describe("Filter by end date (YYYY-MM-DD)"),
+        completed: z.boolean().optional().describe("Filter by completed status"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).extend({
@@ -35,12 +37,14 @@ export function registerProjectTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_project",
-    "Get a specific project by ID",
     {
-      ...CompanySlugSchema.shape,
-      projectId: z.number().int().describe("Project ID"),
+      description: "Get a specific project by ID",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        projectId: z.number().int().describe("Project ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ projectId: z.number().int() });

@@ -5,13 +5,15 @@ import { CompanySlugSchema, PaginationSchema, DateRangeSchema } from "../types.j
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerJournalEntryTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_journal_entries",
-    "List journal entries for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...DateRangeSchema.shape,
+      description: "List journal entries for a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        ...DateRangeSchema.shape,
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema);
@@ -25,12 +27,14 @@ export function registerJournalEntryTools(server: McpServer, client: FikenClient
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_journal_entry",
-    "Get a specific journal entry by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      journalEntryId: z.number().int().describe("Journal entry ID"),
+      description: "Get a specific journal entry by ID. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        journalEntryId: z.number().int().describe("Journal entry ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ journalEntryId: z.number().int() });
@@ -40,12 +44,14 @@ export function registerJournalEntryTools(server: McpServer, client: FikenClient
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_journal_entry_attachments",
-    "List attachments for a specific journal entry",
     {
-      ...CompanySlugSchema.shape,
-      journalEntryId: z.number().int().describe("Journal entry ID"),
+      description: "List attachments for a specific journal entry",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        journalEntryId: z.number().int().describe("Journal entry ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ journalEntryId: z.number().int() });

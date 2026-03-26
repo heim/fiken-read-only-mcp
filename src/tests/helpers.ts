@@ -30,10 +30,9 @@ export type ToolHandler = (args: unknown) => Promise<{
 export class MockMcpServer {
   tools: Map<string, ToolHandler> = new Map();
 
-  tool(
+  registerTool(
     name: string,
-    _description: string,
-    _schema: unknown,
+    _config: { description?: string; inputSchema?: unknown },
     handler: ToolHandler
   ) {
     this.tools.set(name, handler);

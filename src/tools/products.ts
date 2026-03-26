@@ -5,16 +5,18 @@ import { CompanySlugSchema, PaginationSchema, LastModifiedSchema } from "../type
 import { wrapToolError, toText } from "../utils.js";
 
 export function registerProductTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_products",
-    "List products for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...LastModifiedSchema.shape,
-      name: z.string().optional().describe("Filter by product name"),
-      productNumber: z.string().optional().describe("Filter by product number"),
-      active: z.boolean().optional().describe("Filter by active status"),
+      description: "List products for a company. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        ...PaginationSchema.shape,
+        ...LastModifiedSchema.shape,
+        name: z.string().optional().describe("Filter by product name"),
+        productNumber: z.string().optional().describe("Filter by product number"),
+        active: z.boolean().optional().describe("Filter by active status"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.merge(PaginationSchema).merge(LastModifiedSchema).extend({
@@ -32,12 +34,14 @@ export function registerProductTools(server: McpServer, client: FikenClient): vo
     })
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_product",
-    "Get a specific product by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      productId: z.number().int().describe("Product ID"),
+      description: "Get a specific product by ID. Amounts are in cents.",
+      inputSchema: {
+        ...CompanySlugSchema.shape,
+        productId: z.number().int().describe("Product ID"),
+      },
     },
     wrapToolError(async (args) => {
       const schema = CompanySlugSchema.extend({ productId: z.number().int() });

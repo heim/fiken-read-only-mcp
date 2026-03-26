@@ -44,8 +44,8 @@ describe("fiken_list_companies", () => {
 
     await server.call("fiken_list_companies", {});
     expect(client.getPaginated).toHaveBeenCalledWith("/companies", {
-      page: undefined,
-      pageSize: undefined,
+      page: 0,
+      pageSize: 25,
     });
   });
 
@@ -93,7 +93,7 @@ describe("fiken_list_accounts", () => {
 
     expect(client.getPaginated).toHaveBeenCalledWith(
       "/companies/acme/accounts",
-      expect.objectContaining({ page: undefined, pageSize: undefined }),
+      expect.objectContaining({ page: 0, pageSize: 25 }),
       expect.objectContaining({ year: 2024, fromAccount: 1000, toAccount: 1999 })
     );
   });
