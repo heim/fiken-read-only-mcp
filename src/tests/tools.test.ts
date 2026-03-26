@@ -24,7 +24,7 @@ describe("fiken_get_user", () => {
     registerUserTools(server as unknown as McpServer, client);
 
     const result = await server.call("fiken_get_user", {});
-    expect(client.get).toHaveBeenCalledWith("/user");
+    expect(client.get).toHaveBeenCalledWith("/user", undefined);
     expect(JSON.parse(result.content[0].text)).toEqual({
       name: "Test User",
       email: "t@t.com",
@@ -44,9 +44,9 @@ describe("fiken_list_companies", () => {
 
     await server.call("fiken_list_companies", {});
     expect(client.getPaginated).toHaveBeenCalledWith("/companies", {
-      page: undefined,
-      pageSize: undefined,
-    });
+      page: 0,
+      pageSize: 25,
+    }, {});
   });
 
   it("returns company list in response", async () => {
@@ -72,29 +72,28 @@ describe("fiken_get_company", () => {
     registerCompanyTools(server as unknown as McpServer, client);
 
     await server.call("fiken_get_company", { companySlug: "acme" });
-    expect(client.get).toHaveBeenCalledWith("/companies/acme");
+    expect(client.get).toHaveBeenCalledWith("/companies/acme", undefined);
   });
 });
 
 // --- accounts ---
 
 describe("fiken_list_accounts", () => {
-  it("passes year and account range filters", async () => {
+  it("passes account range filters", async () => {
     const client = createMockClient();
     const server = new MockMcpServer();
     registerAccountTools(server as unknown as McpServer, client);
 
     await server.call("fiken_list_accounts", {
       companySlug: "acme",
-      year: 2024,
-      fromAccount: 1000,
-      toAccount: 1999,
+      fromAccount: "1000",
+      toAccount: "1999",
     });
 
     expect(client.getPaginated).toHaveBeenCalledWith(
       "/companies/acme/accounts",
-      expect.objectContaining({ page: undefined, pageSize: undefined }),
-      expect.objectContaining({ year: 2024, fromAccount: 1000, toAccount: 1999 })
+      expect.objectContaining({ page: 0, pageSize: 25 }),
+      expect.objectContaining({ fromAccount: "1000", toAccount: "1999" })
     );
   });
 });
@@ -110,8 +109,7 @@ describe("fiken_get_account", () => {
       accountCode: "1920",
     });
     expect(client.get).toHaveBeenCalledWith(
-      "/companies/acme/accounts/1920",
-      expect.objectContaining({ year: undefined })
+      "/companies/acme/accounts/1920", undefined
     );
   });
 });
@@ -119,15 +117,17 @@ describe("fiken_get_account", () => {
 // --- bank ---
 
 describe("fiken_list_bank_balances", () => {
-  it("calls GET /bankBalances (no pagination)", async () => {
-    const client = createMockClient({
-      get: vi.fn().mockResolvedValue([{ balance: 100000 }]),
-    });
+  it("calls getPaginated /bankBalances", async () => {
+    const client = createMockClient();
     const server = new MockMcpServer();
     registerBankTools(server as unknown as McpServer, client);
 
     await server.call("fiken_list_bank_balances", { companySlug: "acme" });
-    expect(client.get).toHaveBeenCalledWith("/companies/acme/bankBalances");
+    expect(client.getPaginated).toHaveBeenCalledWith(
+      "/companies/acme/bankBalances",
+      expect.objectContaining({ page: 0, pageSize: 25 }),
+      {}
+    );
   });
 });
 
@@ -165,7 +165,7 @@ describe("fiken_get_contact_person", () => {
       contactPersonId: 7,
     });
     expect(client.get).toHaveBeenCalledWith(
-      "/companies/acme/contacts/42/contactPerson/7"
+      "/companies/acme/contacts/42/contactPerson/7", undefined
     );
   });
 });
@@ -181,8 +181,8 @@ describe("fiken_list_invoices", () => {
     await server.call("fiken_list_invoices", {
       companySlug: "acme",
       settled: false,
-      dateGe: "2024-01-01",
-      dateLe: "2024-12-31",
+      issueDateGe: "2024-01-01",
+      issueDateLe: "2024-12-31",
     });
 
     expect(client.getPaginated).toHaveBeenCalledWith(
@@ -190,8 +190,8 @@ describe("fiken_list_invoices", () => {
       expect.any(Object),
       expect.objectContaining({
         settled: false,
-        dateGe: "2024-01-01",
-        dateLe: "2024-12-31",
+        issueDateGe: "2024-01-01",
+        issueDateLe: "2024-12-31",
       })
     );
   });
@@ -204,7 +204,7 @@ describe("fiken_get_invoice_counter", () => {
     registerInvoiceTools(server as unknown as McpServer, client);
 
     await server.call("fiken_get_invoice_counter", { companySlug: "acme" });
-    expect(client.get).toHaveBeenCalledWith("/companies/acme/invoices/counter");
+    expect(client.get).toHaveBeenCalledWith("/companies/acme/invoices/counter", undefined);
   });
 });
 
@@ -219,7 +219,7 @@ describe("fiken_list_invoice_attachments", () => {
       invoiceId: 99,
     });
     expect(client.get).toHaveBeenCalledWith(
-      "/companies/acme/invoices/99/attachments"
+      "/companies/acme/invoices/99/attachments", undefined
     );
   });
 });
@@ -237,7 +237,7 @@ describe("fiken_list_sale_draft_attachments", () => {
       draftId: 5,
     });
     expect(client.get).toHaveBeenCalledWith(
-      "/companies/acme/sales/drafts/5/attachments"
+      "/companies/acme/sales/drafts/5/attachments", undefined
     );
   });
 });
@@ -245,20 +245,20 @@ describe("fiken_list_sale_draft_attachments", () => {
 // --- purchases ---
 
 describe("fiken_list_purchases", () => {
-  it("passes settled filter", async () => {
+  it("passes date filter", async () => {
     const client = createMockClient();
     const server = new MockMcpServer();
     registerPurchaseTools(server as unknown as McpServer, client);
 
     await server.call("fiken_list_purchases", {
       companySlug: "acme",
-      settled: true,
+      date: "2024-06-15",
     });
 
     expect(client.getPaginated).toHaveBeenCalledWith(
       "/companies/acme/purchases",
       expect.any(Object),
-      expect.objectContaining({ settled: true })
+      expect.objectContaining({ date: "2024-06-15" })
     );
   });
 });

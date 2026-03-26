@@ -2,51 +2,51 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
 import { CompanySlugSchema, PaginationSchema } from "../types.js";
-import { wrapToolError, toText } from "../utils.js";
+import { getHandler, listHandler } from "../utils.js";
+
+const ListBankAccountsSchema = CompanySlugSchema.merge(PaginationSchema).extend({
+  inactive: z.boolean().optional().describe("Return inactive bank accounts (true) or active (false)"),
+});
+
+const GetBankAccountSchema = CompanySlugSchema.extend({
+  bankAccountId: z.number().int().describe("Bank account ID"),
+});
+
+const ListBankBalancesSchema = CompanySlugSchema.merge(PaginationSchema).extend({
+  date: z.string().optional().describe("Balance date filter (YYYY-MM-DD)"),
+});
 
 export function registerBankTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_bank_accounts",
-    "List bank accounts for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List bank accounts for a company",
+      inputSchema: ListBankAccountsSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/bankAccounts`,
-        { page, pageSize }
-      );
-      return toText(data);
-    })
+    listHandler(client, ListBankAccountsSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/bankAccounts`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_bank_account",
-    "Get a specific bank account by ID",
     {
-      ...CompanySlugSchema.shape,
-      bankAccountId: z.number().int().describe("Bank account ID"),
+      description: "Get a specific bank account by ID",
+      inputSchema: GetBankAccountSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ bankAccountId: z.number().int() });
-      const { companySlug, bankAccountId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/bankAccounts/${bankAccountId}`);
-      return toText(data);
-    })
+    getHandler(client, GetBankAccountSchema, ({ companySlug, bankAccountId }) =>
+      `/companies/${companySlug}/bankAccounts/${bankAccountId}`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_bank_balances",
-    "List bank balances for all bank accounts of a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
+      description: "List bank balances for all bank accounts of a company. Amounts are in cents.",
+      inputSchema: ListBankBalancesSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug } = CompanySlugSchema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/bankBalances`);
-      return toText(data);
-    })
+    listHandler(client, ListBankBalancesSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/bankBalances`
+    )
   );
 }

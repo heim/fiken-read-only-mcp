@@ -35,3 +35,27 @@ export const LastModifiedSchema = z.object({
   lastModifiedGe: z.string().optional().describe("lastModified greater than or equal (YYYY-MM-DD)"),
   lastModifiedGt: z.string().optional().describe("lastModified greater than (YYYY-MM-DD)"),
 });
+
+export const CreatedDateSchema = z.object({
+  createdDate: z.string().optional().describe("Exact creation date filter (YYYY-MM-DD)"),
+  createdDateLe: z.string().optional().describe("Creation date less than or equal (YYYY-MM-DD)"),
+  createdDateLt: z.string().optional().describe("Creation date less than (YYYY-MM-DD)"),
+  createdDateGe: z.string().optional().describe("Creation date greater than or equal (YYYY-MM-DD)"),
+  createdDateGt: z.string().optional().describe("Creation date greater than (YYYY-MM-DD)"),
+});
+
+export const IssueDateSchema = z.object({
+  issueDate: z.string().optional().describe("Exact issue date filter (YYYY-MM-DD)"),
+  issueDateLe: z.string().optional().describe("Issue date less than or equal (YYYY-MM-DD)"),
+  issueDateLt: z.string().optional().describe("Issue date less than (YYYY-MM-DD)"),
+  issueDateGe: z.string().optional().describe("Issue date greater than or equal (YYYY-MM-DD)"),
+  issueDateGt: z.string().optional().describe("Issue date greater than (YYYY-MM-DD)"),
+});
+
+export const DueDateSchema = z.object({
+  dueDate: z.string().optional().describe("Exact due date filter (YYYY-MM-DD)"),
+  dueDateLe: z.string().optional().describe("Due date less than or equal (YYYY-MM-DD)"),
+  dueDateLt: z.string().optional().describe("Due date less than (YYYY-MM-DD)"),
+  dueDateGe: z.string().optional().describe("Due date greater than or equal (YYYY-MM-DD)"),
+  dueDateGt: z.string().optional().describe("Due date greater than (YYYY-MM-DD)"),
+});

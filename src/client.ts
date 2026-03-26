@@ -1,5 +1,7 @@
 const FIKEN_BASE_URL = "https://api.fiken.no/api/v2";
 
+type QueryParamValue = string | number | boolean | undefined;
+
 export class FikenApiError extends Error {
   constructor(
     public status: number,
@@ -22,7 +24,7 @@ export interface PaginatedResult<T> {
 }
 
 export class FikenClient {
-  private token: string;
+  private readonly token: string;
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(token: string) {
@@ -37,7 +39,7 @@ export class FikenClient {
 
   private async fetchJson<T>(
     path: string,
-    params?: Record<string, string | number | boolean | undefined>
+    params?: Record<string, QueryParamValue>
   ): Promise<{ data: T; headers: Headers }> {
     const url = new URL(`${FIKEN_BASE_URL}${path}`);
     if (params) {
@@ -66,7 +68,7 @@ export class FikenClient {
 
   async get<T>(
     path: string,
-    params?: Record<string, string | number | boolean | undefined>
+    params?: Record<string, QueryParamValue>
   ): Promise<T> {
     return this.enqueue(async () => {
       const { data } = await this.fetchJson<T>(path, params);
@@ -77,7 +79,7 @@ export class FikenClient {
   async getPaginated<T>(
     path: string,
     pagination: { page?: number; pageSize?: number },
-    params?: Record<string, string | number | boolean | undefined>
+    params?: Record<string, QueryParamValue>
   ): Promise<PaginatedResult<T>> {
     return this.enqueue(async () => {
       const allParams = {
@@ -88,12 +90,12 @@ export class FikenClient {
 
       const { data, headers } = await this.fetchJson<T[]>(path, allParams);
 
-      const page = parseInt(headers.get("Fiken-Api-Page") ?? "0", 10);
-      const pageCount = parseInt(
+      const page = Number.parseInt(headers.get("Fiken-Api-Page") ?? "0", 10);
+      const pageCount = Number.parseInt(
         headers.get("Fiken-Api-Page-Count") ?? "1",
         10
       );
-      const resultCount = parseInt(
+      const resultCount = Number.parseInt(
         headers.get("Fiken-Api-Result-Count") ?? String(data.length),
         10
       );

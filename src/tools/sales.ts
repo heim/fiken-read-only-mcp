@@ -2,113 +2,89 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
 import { CompanySlugSchema, PaginationSchema, DateRangeSchema, LastModifiedSchema } from "../types.js";
-import { wrapToolError, toText } from "../utils.js";
+import { getHandler, listHandler } from "../utils.js";
+
+const ListSalesSchema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
+  saleNumber: z.string().optional().describe("Filter by sale number"),
+  createdDate: z.string().optional().describe("Filter by creation date (YYYY-MM-DD)"),
+  contactId: z.number().int().optional().describe("Filter by contact ID"),
+  sortBy: z.string().optional().describe("Sort order"),
+});
+
+const GetSaleSchema = CompanySlugSchema.extend({
+  saleId: z.number().int().describe("Sale ID"),
+});
+
+const GetDraftSchema = CompanySlugSchema.extend({
+  draftId: z.number().int().describe("Draft ID"),
+});
+
+const ListSaleDraftsSchema = CompanySlugSchema.merge(PaginationSchema);
 
 export function registerSaleTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_sales",
-    "List sales for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...DateRangeSchema.shape,
-      ...LastModifiedSchema.shape,
-      saleNumber: z.string().optional().describe("Filter by sale number"),
-      settled: z.boolean().optional().describe("Filter by settled status"),
-      projectId: z.number().int().optional().describe("Filter by project ID"),
+      description: "List sales for a company. Amounts are in cents.",
+      inputSchema: ListSalesSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.merge(PaginationSchema).merge(DateRangeSchema).merge(LastModifiedSchema).extend({
-        saleNumber: z.string().optional(),
-        settled: z.boolean().optional(),
-        projectId: z.number().int().optional(),
-      });
-      const { companySlug, page, pageSize, ...filters } = schema.parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/sales`,
-        { page, pageSize },
-        filters
-      );
-      return toText(data);
-    })
+    listHandler(client, ListSalesSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/sales`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_sale",
-    "Get a specific sale by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      saleId: z.number().int().describe("Sale ID"),
+      description: "Get a specific sale by ID. Amounts are in cents.",
+      inputSchema: GetSaleSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ saleId: z.number().int() });
-      const { companySlug, saleId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/sales/${saleId}`);
-      return toText(data);
-    })
+    getHandler(client, GetSaleSchema, ({ companySlug, saleId }) =>
+      `/companies/${companySlug}/sales/${saleId}`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_sale_attachments",
-    "List attachments for a specific sale",
     {
-      ...CompanySlugSchema.shape,
-      saleId: z.number().int().describe("Sale ID"),
+      description: "List attachments for a specific sale",
+      inputSchema: GetSaleSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ saleId: z.number().int() });
-      const { companySlug, saleId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/sales/${saleId}/attachments`);
-      return toText(data);
-    })
+    getHandler(client, GetSaleSchema, ({ companySlug, saleId }) =>
+      `/companies/${companySlug}/sales/${saleId}/attachments`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_sale_drafts",
-    "List sale drafts for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List sale drafts for a company",
+      inputSchema: ListSaleDraftsSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/sales/drafts`,
-        { page, pageSize }
-      );
-      return toText(data);
-    })
+    listHandler(client, ListSaleDraftsSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/sales/drafts`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_sale_draft",
-    "Get a specific sale draft by ID",
     {
-      ...CompanySlugSchema.shape,
-      draftId: z.number().int().describe("Draft ID"),
+      description: "Get a specific sale draft by ID",
+      inputSchema: GetDraftSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ draftId: z.number().int() });
-      const { companySlug, draftId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/sales/drafts/${draftId}`);
-      return toText(data);
-    })
+    getHandler(client, GetDraftSchema, ({ companySlug, draftId }) =>
+      `/companies/${companySlug}/sales/drafts/${draftId}`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_sale_draft_attachments",
-    "List attachments for a specific sale draft",
     {
-      ...CompanySlugSchema.shape,
-      draftId: z.number().int().describe("Draft ID"),
+      description: "List attachments for a specific sale draft",
+      inputSchema: GetDraftSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ draftId: z.number().int() });
-      const { companySlug, draftId } = schema.parse(args);
-      const data = await client.get(
-        `/companies/${companySlug}/sales/drafts/${draftId}/attachments`
-      );
-      return toText(data);
-    })
+    getHandler(client, GetDraftSchema, ({ companySlug, draftId }) =>
+      `/companies/${companySlug}/sales/drafts/${draftId}/attachments`
+    )
   );
 }

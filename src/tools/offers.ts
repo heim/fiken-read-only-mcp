@@ -2,83 +2,71 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
 import { CompanySlugSchema, PaginationSchema } from "../types.js";
-import { wrapToolError, toText } from "../utils.js";
+import { getHandler, listHandler } from "../utils.js";
+
+const ListOffersSchema = CompanySlugSchema.merge(PaginationSchema);
+
+const GetOfferSchema = CompanySlugSchema.extend({
+  offerId: z.number().int().describe("Offer ID"),
+});
+
+const GetDraftSchema = CompanySlugSchema.extend({
+  draftId: z.number().int().describe("Draft ID"),
+});
 
 export function registerOfferTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_offers",
-    "List offers/quotes for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List offers/quotes for a company. Amounts are in cents.",
+      inputSchema: ListOffersSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/offers`,
-        { page, pageSize }
-      );
-      return toText(data);
-    })
+    listHandler(client, ListOffersSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/offers`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_offer",
-    "Get a specific offer/quote by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      offerId: z.number().int().describe("Offer ID"),
+      description: "Get a specific offer/quote by ID. Amounts are in cents.",
+      inputSchema: GetOfferSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ offerId: z.number().int() });
-      const { companySlug, offerId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/offers/${offerId}`);
-      return toText(data);
-    })
+    getHandler(client, GetOfferSchema, ({ companySlug, offerId }) =>
+      `/companies/${companySlug}/offers/${offerId}`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_offer_counter",
-    "Get the current offer counter/number sequence for a company",
     {
-      ...CompanySlugSchema.shape,
+      description: "Get the current offer counter/number sequence for a company",
+      inputSchema: CompanySlugSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug } = CompanySlugSchema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/offers/counter`);
-      return toText(data);
-    })
+    getHandler(client, CompanySlugSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/offers/counter`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_list_offer_drafts",
-    "List offer drafts for a company",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
+      description: "List offer drafts for a company",
+      inputSchema: ListOffersSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const { companySlug, page, pageSize } = CompanySlugSchema.merge(PaginationSchema).parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/offers/drafts`,
-        { page, pageSize }
-      );
-      return toText(data);
-    })
+    listHandler(client, ListOffersSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/offers/drafts`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_offer_draft",
-    "Get a specific offer draft by ID",
     {
-      ...CompanySlugSchema.shape,
-      draftId: z.number().int().describe("Draft ID"),
+      description: "Get a specific offer draft by ID",
+      inputSchema: GetDraftSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ draftId: z.number().int() });
-      const { companySlug, draftId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/offers/drafts/${draftId}`);
-      return toText(data);
-    })
+    getHandler(client, GetDraftSchema, ({ companySlug, draftId }) =>
+      `/companies/${companySlug}/offers/drafts/${draftId}`
+    )
   );
 }

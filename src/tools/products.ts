@@ -1,49 +1,39 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FikenClient } from "../client.js";
-import { CompanySlugSchema, PaginationSchema, LastModifiedSchema } from "../types.js";
-import { wrapToolError, toText } from "../utils.js";
+import { CompanySlugSchema, PaginationSchema, LastModifiedSchema, CreatedDateSchema } from "../types.js";
+import { getHandler, listHandler } from "../utils.js";
+
+const ListProductsSchema = CompanySlugSchema.merge(PaginationSchema).merge(LastModifiedSchema).merge(CreatedDateSchema).extend({
+  name: z.string().optional().describe("Filter by product name"),
+  productNumber: z.string().optional().describe("Filter by product number"),
+  active: z.boolean().optional().describe("Filter by active status"),
+});
+
+const GetProductSchema = CompanySlugSchema.extend({
+  productId: z.number().int().describe("Product ID"),
+});
 
 export function registerProductTools(server: McpServer, client: FikenClient): void {
-  server.tool(
+  server.registerTool(
     "fiken_list_products",
-    "List products for a company. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      ...PaginationSchema.shape,
-      ...LastModifiedSchema.shape,
-      name: z.string().optional().describe("Filter by product name"),
-      productNumber: z.string().optional().describe("Filter by product number"),
-      active: z.boolean().optional().describe("Filter by active status"),
+      description: "List products for a company. Amounts are in cents.",
+      inputSchema: ListProductsSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.merge(PaginationSchema).merge(LastModifiedSchema).extend({
-        name: z.string().optional(),
-        productNumber: z.string().optional(),
-        active: z.boolean().optional(),
-      });
-      const { companySlug, page, pageSize, ...filters } = schema.parse(args);
-      const data = await client.getPaginated(
-        `/companies/${companySlug}/products`,
-        { page, pageSize },
-        filters
-      );
-      return toText(data);
-    })
+    listHandler(client, ListProductsSchema, ({ companySlug }) =>
+      `/companies/${companySlug}/products`
+    )
   );
 
-  server.tool(
+  server.registerTool(
     "fiken_get_product",
-    "Get a specific product by ID. Amounts are in cents.",
     {
-      ...CompanySlugSchema.shape,
-      productId: z.number().int().describe("Product ID"),
+      description: "Get a specific product by ID. Amounts are in cents.",
+      inputSchema: GetProductSchema.shape,
     },
-    wrapToolError(async (args) => {
-      const schema = CompanySlugSchema.extend({ productId: z.number().int() });
-      const { companySlug, productId } = schema.parse(args);
-      const data = await client.get(`/companies/${companySlug}/products/${productId}`);
-      return toText(data);
-    })
+    getHandler(client, GetProductSchema, ({ companySlug, productId }) =>
+      `/companies/${companySlug}/products/${productId}`
+    )
   );
 }
